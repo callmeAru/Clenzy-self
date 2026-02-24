@@ -1,0 +1,10 @@
+{
+    "name": "clenzy-functions",
+    "version": "1.0.0",
+    "description": "Cloud Functions for clenzy (Python)",
+    "engines": {
+        "node": "18"
+    },
+    "main": "index.js",
+    "dependencies": {}
+}
