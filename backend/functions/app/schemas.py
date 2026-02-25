@@ -63,3 +63,29 @@ class JobResponse(JobBase):
     
     class Config:
         from_attributes = True
+
+# --- Admin ---
+class AdminStatsResponse(BaseModel):
+    total_users: int
+    total_partners: int
+    total_jobs: int
+    total_revenue: float
+    pending_partners: int
+
+class AdminPartnerProfileResponse(BaseModel):
+    id: int
+    user_id: int
+    bio: Optional[str] = None
+    business_type: str
+    business_name: Optional[str] = None
+    use_same_as_profile_name: bool
+    city: str
+    service_radius: float
+    approval_status: str
+    is_profile_complete: bool
+    
+    # We include user details as a nested dict for easy display
+    user: Optional[UserResponse] = None
+
+    class Config:
+        from_attributes = True

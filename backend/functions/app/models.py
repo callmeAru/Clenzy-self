@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, Text, JSON
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from .database import Base
@@ -21,6 +21,36 @@ class User(Base):
     jobs_as_customer = relationship("Job", foreign_keys="Job.customer_id", back_populates="customer")
     jobs_as_worker = relationship("Job", foreign_keys="Job.worker_id", back_populates="worker")
     wallet = relationship("Wallet", back_populates="user", uselist=False)
+    partner_profile = relationship("PartnerProfile", back_populates="user", uselist=False)
+
+class PartnerProfile(Base):
+    __tablename__ = "partner_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True)
+    bio = Column(Text, nullable=True)
+    business_type = Column(String(100), default="Individual")
+    business_name = Column(String(255), nullable=True)
+    use_same_as_profile_name = Column(Boolean, default=True)
+    city = Column(String(255), default="New York")
+    service_radius = Column(Float, default=15.0)
+    payment_method = Column(String(100), nullable=True)
+    payment_id = Column(String(255), nullable=True)
+    national_id_uploaded = Column(Boolean, default=False)
+    certificate_uploaded = Column(Boolean, default=False)
+    national_id_file_name = Column(String(255), nullable=True)
+    certificate_file_name = Column(String(255), nullable=True)
+    is_profile_complete = Column(Boolean, default=False)
+    approval_status = Column(String(50), default="pending")
+    
+    team_members = Column(JSON, default=list)
+    selected_services = Column(JSON, default=list)
+    custom_skills = Column(JSON, default=list)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    user = relationship("User", back_populates="partner_profile")
 
 class Job(Base):
     __tablename__ = "jobs"

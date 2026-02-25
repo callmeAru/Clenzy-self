@@ -5,6 +5,7 @@ import 'signup_screen.dart';
 import '../main_navigation.dart';
 import '../partner/partner_navigation.dart';
 import '../partner/partner_onboarding_screen.dart';
+import '../admin/admin_dashboard.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -49,7 +50,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (!mounted) return;
 
-        if (role == 'worker') {
+        if (role == 'admin') {
+          // Admin flow: go to admin dashboard
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const AdminDashboard()),
+          );
+        } else if (role == 'worker' || role == 'individual_partner' || role == 'agency_partner') {
           // Worker flow: check if partner profile is complete
           final partnerData = PartnerProfileData.instance;
           if (partnerData.isProfileComplete) {

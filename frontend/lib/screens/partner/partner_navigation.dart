@@ -401,7 +401,12 @@ class _PartnerProfileTabState extends State<_PartnerProfileTab> {
                   border: Border.all(color: Colors.red.withAlpha(51)),
                 ),
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    await _authService.signOut();
+                    if (!context.mounted) return;
+                    // Route to login screen or splash screen to restart flow
+                    Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                  },
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),

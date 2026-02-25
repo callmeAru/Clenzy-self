@@ -41,6 +41,7 @@ app.include_router(user.router, prefix="/api/users", tags=["Users"])
 app.include_router(booking.router, prefix="/api/bookings", tags=["Bookings"])
 app.include_router(wallet.router, prefix="/api/wallet", tags=["Wallet"])
 app.include_router(ws.router, prefix="/api", tags=["WebSockets"])
+app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 
 @app.get("/")
 def root():
