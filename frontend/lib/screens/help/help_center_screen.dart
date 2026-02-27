@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../common/safetap_button.dart';
+
 class HelpCenterScreen extends StatefulWidget {
   const HelpCenterScreen({super.key});
 
@@ -89,6 +91,21 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                     const SizedBox(width: 12),
                     Expanded(child: _buildLiveChatCard()),
                   ],
+                ),
+                const SizedBox(height: 16),
+                SafeTapButton(
+                  onPressed: () async {
+                    // This screen is not tied to a specific job,
+                    // so for now we only show a confirmation.
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'In an active job, SafeTap will alert nearby centers from the job screen.',
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 32),
                 // Common Questions Header

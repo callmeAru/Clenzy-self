@@ -1,12 +1,15 @@
-﻿from fastapi import FastAPI, Request
+import os
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import user, worker, admin, booking, ws, wallet
-from app.database import engine
+from app.routes import user, worker, admin, booking, ws, wallet, safetap
+from app.database import engine, SQLALCHEMY_DATABASE_URL
 from app.models import Base
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
+# Create database tables automatically only for local SQLite development.
+# In production (e.g., Supabase Postgres), schema should be managed via migrations.
+if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+    Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Clenzy API",
@@ -42,6 +45,7 @@ app.include_router(booking.router, prefix="/api/bookings", tags=["Bookings"])
 app.include_router(wallet.router, prefix="/api/wallet", tags=["Wallet"])
 app.include_router(ws.router, prefix="/api", tags=["WebSockets"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
+app.include_router(safetap.router, prefix="/api/safetap", tags=["SafeTap"])
 
 @app.get("/")
 def root():

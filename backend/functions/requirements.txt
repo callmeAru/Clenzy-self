@@ -9,3 +9,6 @@ pyjwt
 email-validator
 cryptography
 flask-cors
+alembic
+pytest
+httpx

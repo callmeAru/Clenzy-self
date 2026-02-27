@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'active_job_safetap_sheet.dart';
+import 'worker_tracking_screen.dart';
+
 class BookingsScreen extends StatefulWidget {
   const BookingsScreen({super.key});
 
@@ -270,152 +273,197 @@ class _BookingsScreenState extends State<BookingsScreen> {
     final bool isEnRoute = job['status'] == 'EN ROUTE';
     final bool isCompleted = job['status'] == 'COMPLETED';
     
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        border: Border(
-          bottom: BorderSide(
-            color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE8ECF4),
-            width: 1,
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const WorkerTrackingScreen(
+              jobId: '1',
+              isWorker: false,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          border: Border(
+            bottom: BorderSide(
+              color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE8ECF4),
+              width: 1,
+            ),
           ),
         ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Icon - same style as All Services screen
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(10),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Icon - same style as All Services screen
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(10),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  job['icon'],
+                  color: const Color(0xFF3366FF),
+                  size: 24,
+                ),
               ),
-              child: Icon(
-                job['icon'],
-                color: const Color(0xFF3366FF),
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 14),
-            // Content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Status badge
+              const SizedBox(width: 14),
+              // Content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Status badge
+                    Row(
+                      children: [
+                        if (isEnRoute)
+                          Container(
+                            width: 8,
+                            height: 8,
+                            margin: const EdgeInsets.only(right: 6),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF4CAF50),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        Text(
+                          isEnRoute
+                              ? job['status']
+                              : (isCompleted
+                                  ? '${job['status']} • ${job['dateTime']}'
+                                  : '${job['status']} • ${job['dateTime']}'),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isEnRoute
+                                ? const Color(0xFF4CAF50)
+                                : Color(job['statusColor']),
+                          ),
+                        ),
+                        if (isCompleted && job['rating'] != null) ...[
+                          const Spacer(),
+                          const Icon(
+                            Icons.star,
+                            size: 14,
+                            color: Color(0xFFFFC107),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            job['rating'].toString(),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF1A1D26),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    // Title
+                    Text(
+                      job['title'],
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : const Color(0xFF1A1D26),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    // Address and Worker
                   Row(
-                    children: [
-                      if (isEnRoute)
+                      children: [
+                        Icon(
+                          Icons.location_on_outlined,
+                          size: 14,
+                          color: Colors.grey[500],
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            job['address'],
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[500],
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                         Container(
-                          width: 8,
-                          height: 8,
-                          margin: const EdgeInsets.only(right: 6),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF4CAF50),
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                          width: 4,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[400],
                             shape: BoxShape.circle,
                           ),
                         ),
-                      Text(
-                        isEnRoute 
-                            ? job['status'] 
-                            : (isCompleted 
-                                ? '${job['status']} • ${job['dateTime']}'
-                                : '${job['status']} • ${job['dateTime']}'),
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: isEnRoute 
-                              ? const Color(0xFF4CAF50)
-                              : Color(job['statusColor']),
-                        ),
-                      ),
-                      if (isCompleted && job['rating'] != null) ...[
-                        const Spacer(),
-                        const Icon(
-                          Icons.star,
-                          size: 14,
-                          color: Color(0xFFFFC107),
-                        ),
-                        const SizedBox(width: 4),
                         Text(
-                          job['rating'].toString(),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white : const Color(0xFF1A1D26),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  // Title
-                  Text(
-                    job['title'],
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : const Color(0xFF1A1D26),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  // Address and Worker
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on_outlined,
-                        size: 14,
-                        color: Colors.grey[500],
-                      ),
-                      const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          job['address'],
+                          job['worker'],
                           style: TextStyle(
                             fontSize: 13,
                             color: Colors.grey[500],
                           ),
-                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (_) => const ActiveJobSafetapSheet(
+                              jobId: 1,
+                            ),
+                          );
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFFFF3B30),
+                          padding: EdgeInsets.zero,
+                        ),
+                        icon: const Icon(
+                          Icons.emergency_share_rounded,
+                          size: 18,
+                        ),
+                        label: const Text(
+                          'SafeTap Emergency',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 8),
-                        width: 4,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[400],
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      Text(
-                        job['worker'],
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey[500],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-            // More options
-            Icon(
-              Icons.more_vert,
-              color: Colors.grey[400],
-              size: 20,
-            ),
-          ],
+              // More options
+              Icon(
+                Icons.more_vert,
+                color: Colors.grey[400],
+                size: 20,
+              ),
+            ],
+          ),
         ),
       ),
     );

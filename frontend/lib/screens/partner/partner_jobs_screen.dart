@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../bookings/worker_tracking_screen.dart';
+
 class PartnerJobsScreen extends StatefulWidget {
   const PartnerJobsScreen({super.key});
 
@@ -231,7 +233,19 @@ class _PartnerJobsScreenState extends State<PartnerJobsScreen>
   }
 
   Widget _buildJobCard(Map<String, dynamic> job, {bool showImage = false}) {
-    return Container(
+    return InkWell(
+      onTap: () {
+        // For now, treat this as the worker view for live tracking.
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const WorkerTrackingScreen(
+              jobId: '1',
+              isWorker: true,
+            ),
+          ),
+        );
+      },
+      child: Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
