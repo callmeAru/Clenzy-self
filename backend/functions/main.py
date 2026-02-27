@@ -55,13 +55,17 @@ app.include_router(safetap.router, prefix="/api/safetap", tags=["SafeTap"])
 
 
 # Serve Flutter web build (if present) under /app, and redirect "/" to it.
+# Check both: (1) backend/functions/web - bundled with deployment, (2) frontend/build/web - local dev.
 _BACKEND_DIR = Path(__file__).resolve().parent
+_WEB_IN_FUNCTIONS = _BACKEND_DIR / "web"
 _FRONTEND_BUILD_DIR = _BACKEND_DIR.parent.parent / "frontend" / "build" / "web"
 
-if _FRONTEND_BUILD_DIR.is_dir():
+_STATIC_DIR = _WEB_IN_FUNCTIONS if _WEB_IN_FUNCTIONS.is_dir() else (_FRONTEND_BUILD_DIR if _FRONTEND_BUILD_DIR.is_dir() else None)
+
+if _STATIC_DIR:
     app.mount(
         "/app",
-        StaticFiles(directory=str(_FRONTEND_BUILD_DIR), html=True),
+        StaticFiles(directory=str(_STATIC_DIR), html=True),
         name="frontend",
     )
 
@@ -69,10 +73,12 @@ if _FRONTEND_BUILD_DIR.is_dir():
 @app.get("/")
 def root():
     """
-    When deployed with a Flutter web build, redirect the root URL to the
-    compiled web app. If the web assets are not present, fall back to a
-    simple JSON health message.
+    Redirect root to Flutter web app (/app) when static files are present,
+    or to FLUTTER_APP_URL if set, otherwise return JSON health message.
     """
-    if _FRONTEND_BUILD_DIR.is_dir():
+    if _STATIC_DIR:
         return RedirectResponse(url="/app")
+    flutter_url = os.getenv("FLUTTER_APP_URL", "").strip()
+    if flutter_url:
+        return RedirectResponse(url=flutter_url)
     return {"message": "Clenzy Backend Running Successfully"}
