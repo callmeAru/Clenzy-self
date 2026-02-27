@@ -5,6 +5,7 @@ import 'auth/login_screen.dart';
 import 'main_navigation.dart';
 import 'partner/partner_navigation.dart';
 import 'partner/partner_onboarding_screen.dart';
+import 'admin/admin_dashboard.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -23,19 +24,27 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkAuthAndNavigate() async {
-    // Wait for splash screen to display
-    await Future.delayed(const Duration(seconds: 3));
+    // Give the splash a short display time
+    await Future.delayed(const Duration(seconds: 2));
+
+    // Rehydrate auth state from secure storage
+    await _authService.checkAuthStatus();
 
     if (!mounted) return;
 
-    // Check if user is already logged in
     if (_authService.isLoggedIn) {
-      // Check user role and navigate accordingly
       final role = await _authService.getUserRole();
-      
+
       if (!mounted) return;
 
-      if (role == 'worker') {
+      if (role == 'admin') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const AdminDashboard()),
+        );
+      } else if (role == 'worker' ||
+          role == 'individual_partner' ||
+          role == 'agency_partner') {
         final partnerData = PartnerProfileData.instance;
         if (partnerData.isProfileComplete) {
           Navigator.pushReplacement(
@@ -55,7 +64,6 @@ class _SplashScreenState extends State<SplashScreen> {
         );
       }
     } else {
-      // User is not logged in - go to login
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),

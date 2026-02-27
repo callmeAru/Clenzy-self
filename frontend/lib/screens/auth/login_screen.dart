@@ -23,11 +23,63 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   String? _errorMessage;
 
+  // Optional role hint selected by the user: 'user', 'worker', or 'admin'
+  String _selectedRole = 'user';
+
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Widget _buildRoleChip({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    final bool isSelected = _selectedRole == value;
+
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _selectedRole = value;
+        });
+      },
+      borderRadius: BorderRadius.circular(14),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withAlpha(20) : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected ? color : const Color(0xFFE8ECF4),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: isSelected ? color : const Color(0xFF8E99A4),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? color : const Color(0xFF4A5568),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _handleLogin() async {
@@ -49,6 +101,42 @@ class _LoginScreenState extends State<LoginScreen> {
         final role = await _authService.getUserRole();
 
         if (!mounted) return;
+
+        // Enforce that the selected role matches the account role.
+        // This prevents, for example, logging in as a normal user while
+        // having selected "Admin" on the toggle.
+        if (_selectedRole == 'admin' && role != 'admin') {
+          await _authService.signOut();
+          setState(() {
+            _errorMessage =
+                'This account is not an admin. Please switch to User or Worker.';
+          });
+          return;
+        }
+        if (_selectedRole == 'worker' &&
+            !(role == 'worker' ||
+                role == 'individual_partner' ||
+                role == 'agency_partner')) {
+          await _authService.signOut();
+          setState(() {
+            _errorMessage =
+                'This account is not a worker/partner. Please switch to User or use a worker account.';
+          });
+          return;
+        }
+        if (_selectedRole == 'user' &&
+            (role == 'admin' ||
+                role == 'worker' ||
+                role == 'individual_partner' ||
+                role == 'agency_partner')) {
+          // Optional: prevent partners/admins from entering the pure user flow
+          await _authService.signOut();
+          setState(() {
+            _errorMessage =
+                'This account is not a standard user. Please select the correct role.';
+          });
+          return;
+        }
 
         if (role == 'admin') {
           // Admin flow: go to admin dashboard
@@ -177,7 +265,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Sign in to continue to Clenzy',
+                      'Choose how you want to sign in',
                       style: TextStyle(
                         fontSize: 15,
                         color: Color(0xFF8E99A4),
@@ -210,7 +298,48 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ],
-                    const SizedBox(height: 36),
+                    const SizedBox(height: 24),
+                    // Role selector (User / Worker / Admin)
+                    const Text(
+                      'I am logging in as',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1A1D26),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildRoleChip(
+                            label: 'User',
+                            value: 'user',
+                            icon: Icons.person_rounded,
+                            color: const Color(0xFF3366FF),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildRoleChip(
+                            label: 'Worker',
+                            value: 'worker',
+                            icon: Icons.handyman_rounded,
+                            color: const Color(0xFF10B981),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildRoleChip(
+                            label: 'Admin',
+                            value: 'admin',
+                            icon: Icons.verified_user_rounded,
+                            color: const Color(0xFFF97316),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
                     // Email Field
                     const Text(
                       'Email Address',
