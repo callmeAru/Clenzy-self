@@ -235,7 +235,6 @@ class _PartnerJobsScreenState extends State<PartnerJobsScreen>
   Widget _buildJobCard(Map<String, dynamic> job, {bool showImage = false}) {
     return InkWell(
       onTap: () {
-        // For now, treat this as the worker view for live tracking.
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => const WorkerTrackingScreen(
@@ -246,7 +245,7 @@ class _PartnerJobsScreenState extends State<PartnerJobsScreen>
         );
       },
       child: Container(
-      decoration: BoxDecoration(
+        decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE8ECF4)),
@@ -257,8 +256,8 @@ class _PartnerJobsScreenState extends State<PartnerJobsScreen>
             offset: const Offset(0, 4),
           ),
         ],
-      ),
-      child: Column(
+        ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Image with status badge
@@ -427,6 +426,7 @@ class _PartnerJobsScreenState extends State<PartnerJobsScreen>
             ),
           ),
         ],
+        ),
       ),
     );
   }
