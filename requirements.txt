@@ -1,2 +1,14 @@
--r backend/functions/requirements.txt
-
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+pydantic[email]
+python-dotenv
+passlib[bcrypt]
+pyjwt
+email-validator
+cryptography
+flask-cors
+alembic
+pytest
+httpx
