@@ -128,3 +128,31 @@ CREATE TABLE IF NOT EXISTS notifications (
     is_read BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 7. Emergency Centers (SafeTap - routes panic alerts to nearest center)
+CREATE TABLE IF NOT EXISTS emergency_centers (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    contact_phone VARCHAR(50),
+    contact_email VARCHAR(255),
+    is_active BOOLEAN DEFAULT true,
+    service_radius_km DOUBLE PRECISION DEFAULT 10.0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE
+);
+
+-- 8. Panic Alerts (SafeTap - records emergency alerts from customer/worker)
+CREATE TABLE IF NOT EXISTS panic_alerts (
+    id SERIAL PRIMARY KEY,
+    job_id INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+    triggered_by_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role_at_time VARCHAR(50), -- 'customer' or 'worker'
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
+    status VARCHAR(50) DEFAULT 'open', -- open, in_progress, resolved
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    resolved_at TIMESTAMP WITH TIME ZONE
+);
