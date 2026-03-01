@@ -70,7 +70,7 @@ else:
     # Normalize postgres:// to postgresql:// for SQLAlchemy
     url = SQLALCHEMY_DATABASE_URL
     if url.startswith("postgres://"):
-        url = "postgresql://" + url[10:]
+        url = url.replace("postgres://", "postgresql://", 1)
     engine = create_engine(url, connect_args=connect_args or None)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
