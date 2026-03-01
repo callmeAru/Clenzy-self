@@ -10,7 +10,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Fallback to a local SQLite database if no DATABASE_URL is found
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./sql_app.db")
+# IMPORTANT: In production (Railway), DATABASE_URL must be set in Environment Variables
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
+if not SQLALCHEMY_DATABASE_URL:
+    print("WARNING: DATABASE_URL not found in environment. Falling back to local SQLite.")
+    SQLALCHEMY_DATABASE_URL = "sqlite:///./clenzy_prod_fallback.db"
 
 def create_database_if_not_exists(url):
     """
@@ -71,6 +75,14 @@ else:
     url = SQLALCHEMY_DATABASE_URL
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql://", 1)
+    
+    # Log the host we are connecting to (for debugging deployment)
+    try:
+        temp_parsed = urllib.parse.urlparse(url)
+        print(f"DATABASE: Connecting to host: {temp_parsed.hostname}")
+    except:
+        pass
+
     engine = create_engine(url, connect_args=connect_args or None)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
