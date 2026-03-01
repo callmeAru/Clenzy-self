@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:clenzy/config/api_config.dart';
 
 const String API_URL = 'http://127.0.0.1:8000/api';
 

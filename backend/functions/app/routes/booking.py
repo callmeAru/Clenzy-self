@@ -66,19 +66,34 @@ def update_job_status(job_id: int, new_status: str, db: Session = Depends(get_db
     job = db.query(models.Job).filter(models.Job.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
-        
-    valid_transitions = {
-        'accepted': ['arrived'],
-        'arrived': ['started'],
-        'started': ['completed'],
+
+    # Worker progress transitions
+    worker_transitions = {
+        "accepted": ["arrived"],
+        "arrived": ["started"],
+        "started": ["completed"],  # Prefer verify-otp for completion
     }
-    
+    # Cancel: customer when searching/accepted; worker when accepted
+    if new_status == "cancelled":
+        if job.status == "searching" and job.customer_id == current_user.id:
+            job.status = "cancelled"
+            db.commit()
+            db.refresh(job)
+            return job
+        if job.status == "accepted":
+            if job.customer_id == current_user.id or job.worker_id == current_user.id:
+                job.status = "cancelled"
+                db.commit()
+                db.refresh(job)
+                return job
+        raise HTTPException(status_code=400, detail=f"Cannot cancel job in status {job.status}")
+
+    # Worker-only transitions
     if job.worker_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not assigned to this job")
-        
-    if new_status not in valid_transitions.get(job.status, []):
+    if new_status not in worker_transitions.get(job.status, []):
         raise HTTPException(status_code=400, detail=f"Cannot transition from {job.status} to {new_status}")
-    
+
     job.status = new_status
     db.commit()
     db.refresh(job)
@@ -89,10 +104,15 @@ def verify_otp(job_id: int, otp: str, db: Session = Depends(get_db), current_use
     job = db.query(models.Job).filter(models.Job.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
-        
+    # SECURITY: Only the assigned worker can verify OTP and complete the job.
+    if job.worker_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the assigned worker can verify OTP")
+    # SECURITY: Job must be in 'started' state - worker must have started before completion.
+    if job.status != "started":
+        raise HTTPException(status_code=400, detail=f"Job must be started before OTP verification (current: {job.status})")
     if job.otp != otp:
         raise HTTPException(status_code=400, detail="Invalid OTP")
-        
+
     job.status = "completed"
     job.completed_at = datetime.utcnow()
     

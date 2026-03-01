@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:Clenzy/config/api_config.dart';
 
 const String API_URL = 'http://127.0.0.1:8000/api';
 const String WS_URL = 'ws://127.0.0.1:8000/api/ws';
@@ -28,11 +29,14 @@ class JobServiceClient {
   }
 
   // Connect WebSocket to receive real-time updates for jobs
+  // Backend requires ?token=<jwt> for auth (do not trust user_id from path)
   Future<void> connectWebSocket() async {
     final userId = await _storage.read(key: 'userId');
-    if (userId == null) return;
+    final token = await _storage.read(key: 'jwt');
+    if (userId == null || token == null) return;
 
-    _channel = WebSocketChannel.connect(Uri.parse('$WS_URL/$userId'));
+    final uri = Uri.parse('$WS_URL/$userId').replace(queryParameters: {'token': token});
+    _channel = WebSocketChannel.connect(uri);
     _channel?.stream.listen((message) {
       final decoded = jsonDecode(message);
       // Depending on the signal (new_job, status_update), you could trigger a refetch or patch state directly.

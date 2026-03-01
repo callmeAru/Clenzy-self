@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
+import 'package:Clenzy/config/api_config.dart';
 
 class AdminService {
   final AuthService _authService = AuthService();

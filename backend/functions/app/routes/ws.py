@@ -1,10 +1,10 @@
 import json
 from typing import Dict, List, Optional
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 
+from app import auth, models
 from app.database import SessionLocal
-from app import models
 
 router = APIRouter()
 
@@ -50,7 +50,16 @@ def _get_job_participant_counterparty(job: models.Job, user_id: int) -> Optional
 
 
 @router.websocket("/ws/{user_id}")
-async def websocket_endpoint(websocket: WebSocket, user_id: int):
+async def websocket_endpoint(
+    websocket: WebSocket,
+    user_id: int,
+    token: Optional[str] = Query(None, description="JWT for WebSocket auth"),
+):
+    # SECURITY: Do NOT trust user_id from path. Validate via JWT.
+    token_user_id = auth.get_user_id_from_token(token) if token else None
+    if token_user_id is None or token_user_id != user_id:
+        await websocket.close(code=4001)
+        return
     await manager.connect(websocket, user_id)
     try:
         while True:

@@ -1,41 +1,51 @@
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-// Adjust this depending on emulator or physical device testing
-// Android emulator uses 10.0.2.2. Web/iOS uses 127.0.0.1
-const String API_URL = 'http://127.0.0.1:8000/api'; 
 
+import 'package:clenzy/config/api_config.dart';
+
+/// User model
 class User {
   final int id;
   final String email;
   final String role;
-  
-  User({required this.id, required this.email, required this.role});
+
+  User({
+    required this.id,
+    required this.email,
+    required this.role,
+  });
 }
 
+/// Auth service with state management
 class AuthService extends ChangeNotifier {
-  final _storage = const FlutterSecureStorage();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
   User? _currentUser;
-  
+
   User? get currentUser => _currentUser;
   bool get isLoggedIn => _currentUser != null;
 
-  // Initialize Auth State from Local Storage
+  /// Restore auth state from secure storage
   Future<void> checkAuthStatus() async {
     final token = await _storage.read(key: 'jwt');
     final userId = await _storage.read(key: 'userId');
     final email = await _storage.read(key: 'email');
     final role = await _storage.read(key: 'role');
-    
+
     if (token != null && userId != null) {
-      _currentUser = User(id: int.parse(userId), email: email ?? '', role: role ?? 'user');
+      _currentUser = User(
+        id: int.parse(userId),
+        email: email ?? '',
+        role: role ?? 'user',
+      );
       notifyListeners();
     }
   }
 
-  // Sign up with REST API
+  /// SIGN UP
   Future<void> signUpWithEmail({
     required String email,
     required String password,
@@ -45,7 +55,7 @@ class AuthService extends ChangeNotifier {
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('$API_URL/users/signup'),
+        Uri.parse('$apiBaseUrl/users/signup'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'email': email,
@@ -57,24 +67,25 @@ class AuthService extends ChangeNotifier {
       );
 
       if (response.statusCode != 200) {
-        throw jsonDecode(response.body)['detail'] ?? 'Signup failed';
+        final error = jsonDecode(response.body);
+        throw error['detail'] ?? 'Signup failed';
       }
-      
-      // Auto-login after signup
+
+      // Auto login after successful signup
       await signInWithEmail(email: email, password: password);
     } catch (e) {
-      throw 'Signup failed: ${e.toString()}';
+      throw 'Signup failed: $e';
     }
   }
 
-  // Sign in with REST API
+  /// SIGN IN
   Future<void> signInWithEmail({
     required String email,
     required String password,
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('$API_URL/users/login'),
+        Uri.parse('$apiBaseUrl/users/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'email': email,
@@ -82,35 +93,41 @@ class AuthService extends ChangeNotifier {
         }),
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        
-        await _storage.write(key: 'jwt', value: data['access_token']);
-        await _storage.write(key: 'userId', value: data['user_id'].toString());
-        await _storage.write(key: 'role', value: data['role']);
-        await _storage.write(key: 'email', value: email);
-        
-        _currentUser = User(id: data['user_id'], email: email, role: data['role']);
-        notifyListeners();
-      } else {
-        throw jsonDecode(response.body)['detail'] ?? 'Login failed';
+      if (response.statusCode != 200) {
+        final error = jsonDecode(response.body);
+        throw error['detail'] ?? 'Login failed';
       }
+
+      final data = jsonDecode(response.body);
+
+      await _storage.write(key: 'jwt', value: data['access_token']);
+      await _storage.write(key: 'userId', value: data['user_id'].toString());
+      await _storage.write(key: 'role', value: data['role']);
+      await _storage.write(key: 'email', value: email);
+
+      _currentUser = User(
+        id: data['user_id'],
+        email: email,
+        role: data['role'],
+      );
+
+      notifyListeners();
     } catch (e) {
-      throw 'Login failed: ${e.toString()}';
+      throw 'Login failed: $e';
     }
   }
 
-  // Get current user role (from local storage)
-  Future<String?> getUserRole() async {
-    return _currentUser?.role ?? await _storage.read(key: 'role');
-  }
-
-  // Get current JWT token
+  /// Get stored JWT token
   Future<String?> getToken() async {
     return await _storage.read(key: 'jwt');
   }
 
-  // Sign out
+  /// Get user role
+  Future<String?> getUserRole() async {
+    return _currentUser?.role ?? await _storage.read(key: 'role');
+  }
+
+  /// SIGN OUT
   Future<void> signOut() async {
     await _storage.deleteAll();
     _currentUser = null;

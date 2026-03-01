@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:clenzy/config/api_config.dart';
 
 const String WS_URL = 'ws://127.0.0.1:8000/api/ws';
 const String API_URL = 'http://127.0.0.1:8000/api';
@@ -18,11 +19,14 @@ class LocationService {
   final _liveLocationController = StreamController<Map<String, dynamic>?>.broadcast();
 
   // Connect WebSocket to receive/send real-time location
+  // Backend requires ?token=<jwt> for auth (do not trust user_id from path)
   Future<void> connectWebSocket() async {
     final userId = await _storage.read(key: 'userId');
-    if (userId == null) return;
+    final token = await _storage.read(key: 'jwt');
+    if (userId == null || token == null) return;
 
-    _channel = WebSocketChannel.connect(Uri.parse('$WS_URL/$userId'));
+    final uri = Uri.parse('$WS_URL/$userId').replace(queryParameters: {'token': token});
+    _channel = WebSocketChannel.connect(uri);
     _channel?.stream.listen((message) {
       final decoded = jsonDecode(message);
       if (decoded['type'] == 'location_update') {

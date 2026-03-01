@@ -49,12 +49,15 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 
+# Routers - paths match Flutter API expectations
 app.include_router(user.router, prefix="/api/users", tags=["Users"])
+app.include_router(worker.router, prefix="/api", tags=["Workers"])  # /api/workers/me, /api/workers/jobs
 app.include_router(booking.router, prefix="/api/bookings", tags=["Bookings"])
+app.include_router(booking.router, prefix="/api/jobs", tags=["Jobs"])  # Alias for Flutter /api/jobs/*
 app.include_router(wallet.router, prefix="/api/wallet", tags=["Wallet"])
-app.include_router(ws.router, prefix="/api", tags=["WebSockets"])
+app.include_router(ws.router, prefix="/api", tags=["WebSockets"])     # /api/ws/{user_id}
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
-app.include_router(safetap.router, prefix="/api/safetap", tags=["SafeTap"])
+app.include_router(safetap.router, prefix="/api/safetap", tags=["SafeTap"])  # /api/safetap/panic
 
 
 

@@ -1,11 +1,16 @@
+import os
+
 import bcrypt
 import jwt
 from datetime import datetime, timedelta
 from typing import Optional
 
-SECRET_KEY = "SUPER_SECRET_KEY_FOR_JWT_CLENZY_TOKEN" # In production, keep this in .env
+from dotenv import load_dotenv
+load_dotenv()
+
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-secret-change-in-production")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 7 days long expiration for easy mobile testing
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 
 def verify_password(plain_password, hashed_password):
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
@@ -24,15 +29,14 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-# Dependency snippet for verifying token could be here
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from .database import get_db
 from sqlalchemy.orm import Session
-from . import models, schemas
-import jwt
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/users/login")
+from . import models, schemas
+from .database import get_db
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/users/login")
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
@@ -61,3 +65,17 @@ def get_current_admin(current_user: models.User = Depends(get_current_user)):
             detail="The user doesn't have enough privileges"
         )
     return current_user
+
+
+def get_user_id_from_token(token: str) -> Optional[int]:
+    """
+    Decode JWT and return user_id. Used for WebSocket auth (cannot use Bearer header).
+    Returns None if token is invalid or missing user_id.
+    """
+    if not token or not token.strip():
+        return None
+    try:
+        payload = jwt.decode(token.strip(), SECRET_KEY, algorithms=[ALGORITHM])
+        return payload.get("user_id")
+    except jwt.PyJWTError:
+        return None

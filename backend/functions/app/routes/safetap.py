@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from math import radians, sin, cos, asin, sqrt
 from typing import Optional
 
@@ -74,6 +75,22 @@ def trigger_panic(
     if current_user.id not in (job.customer_id, job.worker_id):
         raise HTTPException(
             status_code=403, detail="You are not a participant in this job"
+        )
+
+    # Prevent duplicate panic: same user + same job within 60 seconds
+    recent = datetime.utcnow() - timedelta(seconds=60)
+    existing = (
+        db.query(models.PanicAlert)
+        .filter(
+            models.PanicAlert.job_id == payload.job_id,
+            models.PanicAlert.triggered_by_user_id == current_user.id,
+            models.PanicAlert.created_at >= recent,
+        )
+        .first()
+    )
+    if existing:
+        raise HTTPException(
+            status_code=429, detail="Panic already triggered recently for this job"
         )
 
     role_at_time = "customer" if current_user.id == job.customer_id else "worker"

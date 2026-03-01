@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:clenzy/config/api_config.dart';
 
 const String API_URL = 'http://127.0.0.1:8000/api';
 const String WS_URL = 'ws://127.0.0.1:8000/api/ws';
