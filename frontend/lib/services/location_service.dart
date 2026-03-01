@@ -6,8 +6,6 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:clenzy/config/api_config.dart';
 
-const String WS_URL = 'ws://127.0.0.1:8000/api/ws';
-const String API_URL = 'http://127.0.0.1:8000/api';
 
 class LocationService {
   final _storage = const FlutterSecureStorage();
@@ -25,7 +23,7 @@ class LocationService {
     final token = await _storage.read(key: 'jwt');
     if (userId == null || token == null) return;
 
-    final uri = Uri.parse('$WS_URL/$userId').replace(queryParameters: {'token': token});
+    final uri = Uri.parse('$wsUrl/$userId').replace(queryParameters: {'token': token});
     _channel = WebSocketChannel.connect(uri);
     _channel?.stream.listen((message) {
       final decoded = jsonDecode(message);

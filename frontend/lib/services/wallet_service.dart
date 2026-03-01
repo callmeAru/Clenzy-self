@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:clenzy/config/api_config.dart';
 
-const String API_URL = 'http://127.0.0.1:8000/api';
 
 class WalletService {
   final _storage = const FlutterSecureStorage();
@@ -29,7 +28,7 @@ class WalletService {
   Future<void> fetchWallet() async {
     try {
       final headers = await _getAuthHeaders();
-      final response = await http.get(Uri.parse('$API_URL/wallet/balance'), headers: headers);
+      final response = await http.get(Uri.parse('$apiBaseUrl/wallet/balance'), headers: headers);
       if (response.statusCode == 200) {
         _walletController.add(jsonDecode(response.body));
       }
@@ -46,7 +45,7 @@ class WalletService {
   Future<Map<String, dynamic>?> getWallet(String userId) async {
     try {
       final headers = await _getAuthHeaders();
-      final response = await http.get(Uri.parse('$API_URL/wallet/balance'), headers: headers);
+      final response = await http.get(Uri.parse('$apiBaseUrl/wallet/balance'), headers: headers);
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       }
@@ -64,7 +63,7 @@ class WalletService {
   Future<void> fetchTransactions() async {
     try {
       final headers = await _getAuthHeaders();
-      final response = await http.get(Uri.parse('$API_URL/wallet/transactions'), headers: headers);
+      final response = await http.get(Uri.parse('$apiBaseUrl/wallet/transactions'), headers: headers);
       if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
         _transactionsController.add(data.cast<Map<String, dynamic>>());

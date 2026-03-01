@@ -5,7 +5,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:clenzy/config/api_config.dart';
 
-const String _apiBaseUrl = 'http://127.0.0.1:8000/api/safetap';
 
 class SafetapService {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
@@ -22,7 +21,7 @@ class SafetapService {
         throw Exception('Not authenticated');
       }
 
-      final uri = Uri.parse('$_apiBaseUrl/panic');
+      final uri = Uri.parse('$apiBaseUrl/safetap/panic');
       final response = await http.post(
         uri,
         headers: {

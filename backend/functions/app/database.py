@@ -55,13 +55,23 @@ def create_database_if_not_exists(url):
 
 create_database_if_not_exists(SQLALCHEMY_DATABASE_URL)
 
-# SQLite needs connect_args={"check_same_thread": False}, Postgres doesn't
+# SQLite needs connect_args. Postgres (Supabase/Railway) needs SSL for cloud.
 if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
     engine = create_engine(
         SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
     )
 else:
-    engine = create_engine(SQLALCHEMY_DATABASE_URL)
+    parsed = urllib.parse.urlparse(SQLALCHEMY_DATABASE_URL)
+    host = (parsed.hostname or "").lower()
+    # Cloud Postgres (Supabase, Railway) requires SSL
+    connect_args = {}
+    if host and host not in ("localhost", "127.0.0.1"):
+        connect_args["sslmode"] = "require"
+    # Normalize postgres:// to postgresql:// for SQLAlchemy
+    url = SQLALCHEMY_DATABASE_URL
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[10:]
+    engine = create_engine(url, connect_args=connect_args or None)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

@@ -4,10 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:Clenzy/config/api_config.dart';
-
-const String API_URL = 'http://127.0.0.1:8000/api';
-const String WS_URL = 'ws://127.0.0.1:8000/api/ws';
+import 'package:clenzy/config/api_config.dart';
 
 class JobServiceClient {
   final _storage = const FlutterSecureStorage();
@@ -35,7 +32,7 @@ class JobServiceClient {
     final token = await _storage.read(key: 'jwt');
     if (userId == null || token == null) return;
 
-    final uri = Uri.parse('$WS_URL/$userId').replace(queryParameters: {'token': token});
+    final uri = Uri.parse('$wsUrl/$userId').replace(queryParameters: {'token': token});
     _channel = WebSocketChannel.connect(uri);
     _channel?.stream.listen((message) {
       final decoded = jsonDecode(message);
@@ -62,7 +59,7 @@ class JobServiceClient {
     final headers = await _getAuthHeaders();
 
     final response = await http.post(
-      Uri.parse('$API_URL/bookings/'),
+      Uri.parse('$apiBaseUrl/bookings/'),
       headers: headers,
       body: jsonEncode({
         'service_type': serviceType,
@@ -91,7 +88,7 @@ class JobServiceClient {
     final headers = await _getAuthHeaders();
 
     final response = await http.post(
-      Uri.parse('$API_URL/bookings/$jobId/accept'),
+      Uri.parse('$apiBaseUrl/bookings/$jobId/accept'),
       headers: headers,
     );
 
@@ -115,7 +112,7 @@ class JobServiceClient {
     final headers = await _getAuthHeaders();
 
     final response = await http.put(
-      Uri.parse('$API_URL/bookings/$jobId/status?new_status=$newStatus'),
+      Uri.parse('$apiBaseUrl/bookings/$jobId/status?new_status=$newStatus'),
       headers: headers,
     );
 
@@ -132,7 +129,7 @@ class JobServiceClient {
     final headers = await _getAuthHeaders();
 
     final response = await http.post(
-      Uri.parse('$API_URL/bookings/$jobId/verify-otp?otp=$inputOtp'),
+      Uri.parse('$apiBaseUrl/bookings/$jobId/verify-otp?otp=$inputOtp'),
       headers: headers,
     );
 
@@ -153,7 +150,7 @@ class JobServiceClient {
   Future<void> fetchCustomerJobs() async {
     try {
       final headers = await _getAuthHeaders();
-      final response = await http.get(Uri.parse('$API_URL/bookings/customer'), headers: headers);
+      final response = await http.get(Uri.parse('$apiBaseUrl/bookings/customer'), headers: headers);
       if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
         _customerJobsController.add(data.cast<Map<String, dynamic>>());
@@ -166,7 +163,7 @@ class JobServiceClient {
   Future<void> fetchWorkerJobs() async {
     try {
       final headers = await _getAuthHeaders();
-      final response = await http.get(Uri.parse('$API_URL/bookings/worker'), headers: headers);
+      final response = await http.get(Uri.parse('$apiBaseUrl/bookings/worker'), headers: headers);
       if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
         _workerJobsController.add(data.cast<Map<String, dynamic>>());
@@ -179,7 +176,7 @@ class JobServiceClient {
   Future<void> fetchAvailableJobs() async {
     try {
       final headers = await _getAuthHeaders();
-      final response = await http.get(Uri.parse('$API_URL/bookings/available'), headers: headers);
+      final response = await http.get(Uri.parse('$apiBaseUrl/bookings/available'), headers: headers);
       if (response.statusCode == 200) {
         List<dynamic> data = jsonDecode(response.body);
         _availableJobsController.add(data.cast<Map<String, dynamic>>());

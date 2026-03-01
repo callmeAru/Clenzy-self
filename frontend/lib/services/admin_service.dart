@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
-import 'package:Clenzy/config/api_config.dart';
+import 'package:clenzy/config/api_config.dart';
 
 class AdminService {
   final AuthService _authService = AuthService();
@@ -17,7 +17,7 @@ class AdminService {
   Future<Map<String, dynamic>> getDashboardStats() async {
     try {
       final response = await http.get(
-        Uri.parse('$API_URL/admin/stats'),
+        Uri.parse('$apiBaseUrl/admin/stats'),
         headers: await _getHeaders(),
       );
 
@@ -34,7 +34,7 @@ class AdminService {
   Future<List<dynamic>> getUsers() async {
     try {
       final response = await http.get(
-        Uri.parse('$API_URL/admin/users'),
+        Uri.parse('$apiBaseUrl/admin/users'),
         headers: await _getHeaders(),
       );
 
@@ -51,7 +51,7 @@ class AdminService {
   Future<void> toggleUserStatus(int userId, bool isActive) async {
     try {
       final response = await http.put(
-        Uri.parse('$API_URL/admin/users/$userId/status?is_active=$isActive'),
+        Uri.parse('$apiBaseUrl/admin/users/$userId/status?is_active=$isActive'),
         headers: await _getHeaders(),
       );
 
@@ -66,7 +66,7 @@ class AdminService {
   Future<List<dynamic>> getPendingApprovals() async {
     try {
       final response = await http.get(
-        Uri.parse('$API_URL/admin/partner-approvals'),
+        Uri.parse('$apiBaseUrl/admin/partner-approvals'),
         headers: await _getHeaders(),
       );
 
@@ -83,7 +83,7 @@ class AdminService {
   Future<void> reviewPartner(int profileId, bool approve) async {
     try {
       final response = await http.put(
-        Uri.parse('$API_URL/admin/partner-approvals/$profileId?approve=$approve'),
+        Uri.parse('$apiBaseUrl/admin/partner-approvals/$profileId?approve=$approve'),
         headers: await _getHeaders(),
       );
 

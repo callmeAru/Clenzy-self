@@ -12,8 +12,8 @@ from app.models import Base
 
 
 
-if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
-    Base.metadata.create_all(bind=engine)
+# Create tables if they don't exist (safe, idempotent)
+Base.metadata.create_all(bind=engine)
 
 
 
@@ -36,10 +36,16 @@ app.add_middleware(
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    print(f"ERROR: {str(exc)}")
+    import traceback
+    msg = str(exc)
+    print(f"ERROR: {msg}")
+    traceback.print_exc()
+    detail = "Internal Server Error"
+    if os.getenv("DEBUG", "").lower() in ("1", "true", "yes"):
+        detail = msg
     return JSONResponse(
         status_code=500,
-        content={"detail": "Internal Server Error"},
+        content={"detail": detail},
         headers={
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "*",
@@ -85,13 +91,11 @@ if STATIC_DIR:
 @app.get("/")
 def root():
     """
-    Serve Flutter web app at root if present.
-    Otherwise redirect to external Flutter URL or show health JSON.
+    Redirect / to /app so Flutter assets load correctly (base href /app/).
+    Otherwise redirect to FLUTTER_APP_URL or show health JSON.
     """
     if STATIC_DIR:
-        index_file = STATIC_DIR / "index.html"
-        if index_file.exists():
-            return FileResponse(index_file)
+        return RedirectResponse(url="/app/")
 
     flutter_url = os.getenv("FLUTTER_APP_URL", "").strip()
     if flutter_url:
